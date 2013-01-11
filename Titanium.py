@@ -16,7 +16,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         if self.platform == "ios":
             self.targets = ["simulator", "device"]
             self.window.show_quick_panel(self.targets, self.select_ios_target)
-        if self.platform == "android":
+        elif self.platform == "android":
             self.load_android_avds()
             self.window.show_quick_panel(self.avds, self.select_android_avd)
         else:
