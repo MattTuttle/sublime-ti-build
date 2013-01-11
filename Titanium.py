@@ -17,8 +17,8 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             self.targets = ["simulator", "device"]
             self.window.show_quick_panel(self.targets, self.select_ios_target)
         elif self.platform == "android":
-            self.load_android_avds()
-            self.window.show_quick_panel(self.avds, self.select_android_avd)
+            self.targets = ["emulator", "device", "dist-appstore", "dist-adhoc"]
+            self.window.show_quick_panel(self.targets, self.select_android_target)
         else:
             self.run_titanium()  # mobile web
 
@@ -26,6 +26,16 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         process = subprocess.Popen(["android", "list", "avd", "-c"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         result, error = process.communicate()
         self.avds = result.split()
+
+    def select_android_target(self, select):
+        if (select < 0):
+            return
+        target = self.targets[select]
+        if (target == "emulator"):
+            self.load_android_avds()
+            self.window.show_quick_panel(self.avds, self.select_android_avd)
+        else:
+            self.run_titanium(["--target", target])
 
     def select_android_avd(self, select):
         if (select < 0):
