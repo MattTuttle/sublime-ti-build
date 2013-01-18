@@ -104,6 +104,11 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             options.extend(["--developer-name", self.cert])
         else:
             options.extend(["--distribution-name", self.cert])
+
+        if self.target == "dist-adhoc":
+            project_dir = self.window.folders()[0]
+            options.extend(["--output-dir", project_dir + "/dist"])
+
         self.run_titanium(options)
 
     def load_ios_info(self):
