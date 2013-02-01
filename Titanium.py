@@ -6,22 +6,27 @@ import subprocess
 class TitaniumCommand(sublime_plugin.WindowCommand):
 
     def run(self, *args, **kwargs):
-        self.platforms = ["android", "ios", "mobileweb"]
+        self.platforms = ["android", "ios", "mobileweb", "clean"]
         self.window.show_quick_panel(self.platforms, self.select_platform)
 
     def select_platform(self, select):
+        print select
         if select < 0:
             return
         self.platform = self.platforms[select]
+
         if self.platform == "ios":
             self.targets = ["simulator", "device", "dist-appstore", "dist-adhoc"]
             self.window.show_quick_panel(self.targets, self.select_ios_target)
         elif self.platform == "android":
             self.targets = ["emulator", "device", "dist-appstore", "dist-adhoc"]
             self.window.show_quick_panel(self.targets, self.select_android_target)
-        else:
+        elif self.platform == "mobileweb":
             self.targets = ["development", "production"]
             self.window.show_quick_panel(self.targets, self.select_mobileweb_target)
+        else:  # clean project
+            folder = self.window.folders()[0]
+            self.window.run_command("exec", {"cmd": ["titanium", "clean", "--no-colors", "--project-dir", folder]})
 
     def run_titanium(self, options=[]):
         folder = self.window.folders()[0]  # base project folder
