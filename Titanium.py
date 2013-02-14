@@ -1,3 +1,4 @@
+import sublime
 import sublime_plugin
 import json
 import subprocess
@@ -7,26 +8,28 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
 
     def run(self, *args, **kwargs):
         self.platforms = ["android", "ios", "mobileweb", "clean"]
-        self.window.show_quick_panel(self.platforms, self.select_platform)
+        self.show_quick_panel(self.platforms, self.select_platform)
 
     def select_platform(self, select):
-        print select
         if select < 0:
             return
         self.platform = self.platforms[select]
 
         if self.platform == "ios":
             self.targets = ["simulator", "device", "dist-appstore", "dist-adhoc"]
-            self.window.show_quick_panel(self.targets, self.select_ios_target)
+            self.show_quick_panel(self.targets, self.select_ios_target)
         elif self.platform == "android":
             self.targets = ["emulator", "device", "dist-appstore", "dist-adhoc"]
-            self.window.show_quick_panel(self.targets, self.select_android_target)
+            self.show_quick_panel(self.targets, self.select_android_target)
         elif self.platform == "mobileweb":
             self.targets = ["development", "production"]
-            self.window.show_quick_panel(self.targets, self.select_mobileweb_target)
+            self.show_quick_panel(self.targets, self.select_mobileweb_target)
         else:  # clean project
             folder = self.window.folders()[0]
             self.window.run_command("exec", {"cmd": ["titanium", "clean", "--no-colors", "--project-dir", folder]})
+
+    def show_quick_panel(self, options, done):
+        sublime.set_timeout(lambda: self.window.show_quick_panel(options, done), 10)
 
     def run_titanium(self, options=[]):
         folder = self.window.folders()[0]  # base project folder
@@ -58,7 +61,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         target = self.targets[select]
         if (target == "emulator"):
             self.load_android_avds()
-            self.window.show_quick_panel(self.avds, self.select_android_avd)
+            self.show_quick_panel(self.avds, self.select_android_avd)
         else:
             self.run_titanium(["--target", target])
 
@@ -77,10 +80,10 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         self.target = self.targets[select]
         if self.target == "simulator":
             self.simtype = ["iphone", "ipad"]
-            self.window.show_quick_panel(self.simtype, self.select_ios_simtype)
+            self.show_quick_panel(self.simtype, self.select_ios_simtype)
         else:
             self.families = ["iphone", "ipad", "universal"]
-            self.window.show_quick_panel(self.families, self.select_ios_family)
+            self.show_quick_panel(self.families, self.select_ios_family)
 
     def select_ios_simtype(self, select):
         if select < 0:
@@ -92,13 +95,13 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             return
         self.family = self.families[select]
         self.load_ios_info()
-        self.window.show_quick_panel(self.certs, self.select_ios_cert)
+        self.show_quick_panel(self.certs, self.select_ios_cert)
 
     def select_ios_cert(self, select):
         if select < 0:
             return
         self.cert = self.certs[select]
-        self.window.show_quick_panel(self.profiles, self.select_ios_profile)
+        self.show_quick_panel(self.profiles, self.select_ios_profile)
 
     def select_ios_profile(self, select):
         if select < 0:
@@ -120,9 +123,9 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         process = subprocess.Popen(["titanium", "info", "--types", "ios", "--output", "json"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         result, error = process.communicate()
         info = json.loads(result)
-        for name, obj in info.items():
+        for name, obj in list(info.items()):
             if name == "iosCerts":
-                for target, c in obj.items():
+                for target, c in list(obj.items()):
                     if target == "wwdr" or (target == "devNames" and self.target != "device") or (target == "distNames" and self.target == "device"):
                         continue
                     l = []
@@ -130,7 +133,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
                         l.append(cert)
                     self.certs = l
             elif name == "iOSProvisioningProfiles":
-                for target, p in obj.items():
+                for target, p in list(obj.items()):
                     # TODO: figure out what to do with enterprise profiles
                     if (target == "development" and self.target == "device") or (target == "distribution" and self.target == "dist-appstore") or (target == "adhoc" and self.target == "dist-adhoc"):
                         l = []
