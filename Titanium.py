@@ -122,7 +122,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
     def load_ios_info(self):
         process = subprocess.Popen(["titanium", "info", "--types", "ios", "--output", "json"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         result, error = process.communicate()
-        info = json.loads(result)
+        info = json.loads(result.decode('utf-8'))
         for name, obj in list(info.items()):
             if name == "iosCerts":
                 for target, c in list(obj.items()):
