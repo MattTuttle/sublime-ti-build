@@ -19,7 +19,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             self.targets = ["simulator", "device", "dist-appstore", "dist-adhoc"]
             self.show_quick_panel(self.targets, self.select_ios_target)
         elif self.platform == "android":
-            self.targets = ["emulator", "device", "dist-appstore", "dist-adhoc"]
+            self.targets = ["emulator", "device", "dist-playstore"]
             self.show_quick_panel(self.targets, self.select_android_target)
         elif self.platform == "mobileweb":
             self.targets = ["development", "production"]
