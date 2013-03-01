@@ -70,7 +70,7 @@
 		<key>constant</key>
 		<dict>
 			<key>match</key>
-			<string>\b(?:true|false|null|Ti[\.a-zA-Z]*)\b</string>
+			<string>\b(?:true|false|null|Ti[\.a-zA-Z_]*)\b</string>
 			<key>name</key>
 			<string>constant.language.tss</string>
 		</dict>
