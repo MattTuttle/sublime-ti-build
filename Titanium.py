@@ -7,8 +7,17 @@ import subprocess
 class TitaniumCommand(sublime_plugin.WindowCommand):
 
     def run(self, *args, **kwargs):
-        self.platforms = ["android", "ios", "mobileweb", "clean"]
-        self.show_quick_panel(self.platforms, self.select_platform)
+        settings = sublime.load_settings('Titanium.sublime-settings')
+        self.cli = settings.get("titaniumCLI", "/usr/local/bin/titanium")
+        self.android = settings.get("androidSDK", "/opt/android-sdk") + "/tools/android"
+
+        folders = self.window.folders()
+        if len(folders) > 0:
+            self.project_folder = folders[0]
+            self.platforms = ["android", "ios", "mobileweb", "clean"]
+            self.show_quick_panel(self.platforms, self.select_platform)
+        else:
+            self.show_quick_panel(["ERROR: Must have a project open"], None)
 
     def select_platform(self, select):
         if select < 0:
@@ -25,15 +34,13 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             self.targets = ["development", "production"]
             self.show_quick_panel(self.targets, self.select_mobileweb_target)
         else:  # clean project
-            folder = self.window.folders()[0]
-            self.window.run_command("exec", {"cmd": ["titanium", "clean", "--no-colors", "--project-dir", folder]})
+            self.window.run_command("exec", {"cmd": [self.cli, "clean", "--no-colors", "--project-dir", self.project_folder]})
 
     def show_quick_panel(self, options, done):
         sublime.set_timeout(lambda: self.window.show_quick_panel(options, done), 10)
 
     def run_titanium(self, options=[]):
-        folder = self.window.folders()[0]  # base project folder
-        cmd = ["titanium", "build", "--project-dir", folder, "--no-colors", "--platform", self.platform]
+        cmd = [self.cli, "build", "--project-dir", self.project_folder, "--no-colors", "--platform", self.platform]
         cmd.extend(options)
         self.window.run_command("exec", {"cmd": cmd})
 
@@ -51,7 +58,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
     #--------------------------------------------------------------
 
     def load_android_avds(self):
-        process = subprocess.Popen(["android", "list", "avd", "-c"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen([self.android, "list", "avd", "-c"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         result, error = process.communicate()
         self.avds = result.split()
 
@@ -114,13 +121,12 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             options.extend(["--distribution-name", self.cert])
 
         if self.target == "dist-adhoc":
-            project_dir = self.window.folders()[0]
-            options.extend(["--output-dir", project_dir + "/dist"])
+            options.extend(["--output-dir", self.project_folder + "/dist"])
 
         self.run_titanium(options)
 
     def load_ios_info(self):
-        process = subprocess.Popen(["titanium", "info", "--types", "ios", "--output", "json"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen([self.cli, "info", "--types", "ios", "--output", "json"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         result, error = process.communicate()
         info = json.loads(result.decode('utf-8'))
         for name, obj in list(info.items()):
