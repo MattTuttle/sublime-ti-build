@@ -17,7 +17,7 @@ The best way to install is to use [Package Control](http://wbond.net/sublime_pac
 
 ## Usage
 
-Super + b - select build options from drop downs
+`super+b` - select build options from drop downs
 
 ## Todo
 
