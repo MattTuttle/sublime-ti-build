@@ -10,7 +10,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         settings = sublime.load_settings('Titanium.sublime-settings')
         self.cli = settings.get("titaniumCLI", "/usr/local/bin/titanium")
         self.android = settings.get("androidSDK", "/opt/android-sdk") + "/tools/android"
-
+	self.loggingLevel = settings.get("loggingLevel", "info")
         folders = self.window.folders()
         if len(folders) > 0:
             self.project_folder = folders[0]
@@ -40,7 +40,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         sublime.set_timeout(lambda: self.window.show_quick_panel(options, done), 10)
 
     def run_titanium(self, options=[]):
-        cmd = [self.cli, "build", "--project-dir", self.project_folder, "--no-colors", "--platform", self.platform]
+        cmd = [self.cli, "build", "--project-dir", self.project_folder, "--no-colors", "--platform", self.platform, "--log-level", self.loggingLevel]
         cmd.extend(options)
         self.window.run_command("exec", {"cmd": cmd})
 

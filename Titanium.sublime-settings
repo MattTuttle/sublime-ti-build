@@ -1,6 +1,8 @@
 {
 	// Path to the Titanium CLI
 	"titaniumCLI": "/usr/local/bin/titanium",
+	// Logging Level [trace, debug, info, warn, error]
+	"loggingLevel": "info",
 	// Path to the android sdk
 	"androidSDK": "/opt/android-sdk"
 }
