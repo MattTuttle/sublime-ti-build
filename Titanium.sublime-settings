@@ -4,5 +4,9 @@
 	// Logging Level [trace, debug, info, warn, error]
 	"loggingLevel": "info",
 	// Path to the android sdk
-	"androidSDK": "/opt/android-sdk"
+	"androidSDK": "/opt/android-sdk",
+	// Extra Settings for the iOS Simulator
+	// If you dont want to set them, make the values empty
+	"simulatorDisplay": "--retina",
+	"simulatorHeight": "--tall"
 }

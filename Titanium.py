@@ -10,7 +10,9 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         settings = sublime.load_settings('Titanium.sublime-settings')
         self.cli = settings.get("titaniumCLI", "/usr/local/bin/titanium")
         self.android = settings.get("androidSDK", "/opt/android-sdk") + "/tools/android"
-	self.loggingLevel = settings.get("loggingLevel", "info")
+        self.loggingLevel = settings.get("loggingLevel", "info")
+        self.simulatorDisplay = str(settings.get("simulatorDisplay", "--retina"))
+        self.simulatorHeight = str(settings.get("simulatorHeight", "--tall"))
         folders = self.window.folders()
         if len(folders) > 0:
             self.project_folder = folders[0]
@@ -95,8 +97,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
     def select_ios_simtype(self, select):
         if select < 0:
             return
-        self.run_titanium(["--sim-type", self.simtype[select]])
-
+        self.run_titanium(["--sim-type", self.simtype[select], self.simulatorDisplay, self.simulatorHeight])
     def select_ios_family(self, select):
         if select < 0:
             return
