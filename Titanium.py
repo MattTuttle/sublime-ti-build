@@ -44,6 +44,8 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
 
     def run_titanium(self, options=[]):
         cmd = [self.cli, "build", "--project-dir", self.project_folder, "--no-colors", "--platform", self.platform, "--log-level", self.loggingLevel]
+        if self.iosVersion:
+            options.extend(["--ios-version", self.iosVersion])
         cmd.extend(options)
         self.window.run_command("exec", {"cmd": cmd})
 
@@ -124,10 +126,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
 
         if self.target == "dist-adhoc":
             options.extend(["--output-dir", self.project_folder + "/dist"])
-
-        if self.iosVersion:
-            options.extend(["--ios-version", self.iosVersion])
-            
+    
         self.run_titanium(options)
 
     def load_ios_info(self):
