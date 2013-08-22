@@ -8,5 +8,7 @@
 	// Extra Settings for the iOS Simulator
 	// If you dont want to set them, make the values empty
 	"simulatorDisplay": "--retina",
-	"simulatorHeight": "--tall"
+	"simulatorHeight": "--tall",
+	"iosVersion": "" //eg. 6.1
+	
 }
