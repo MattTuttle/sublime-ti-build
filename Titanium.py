@@ -13,6 +13,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         self.loggingLevel = settings.get("loggingLevel", "info")
         self.simulatorDisplay = str(settings.get("simulatorDisplay", "--retina"))
         self.simulatorHeight = str(settings.get("simulatorHeight", "--tall"))
+        self.iosVersion = str(settings.get("iosVersion"))
         folders = self.window.folders()
         if len(folders) > 0:
             self.project_folder = folders[0]
@@ -43,6 +44,8 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
 
     def run_titanium(self, options=[]):
         cmd = [self.cli, "build", "--project-dir", self.project_folder, "--no-colors", "--platform", self.platform, "--log-level", self.loggingLevel]
+        if self.iosVersion:
+            options.extend(["--ios-version", self.iosVersion])
         cmd.extend(options)
         self.window.run_command("exec", {"cmd": cmd})
 
@@ -123,7 +126,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
 
         if self.target == "dist-adhoc":
             options.extend(["--output-dir", self.project_folder + "/dist"])
-
+    
         self.run_titanium(options)
 
     def load_ios_info(self):
