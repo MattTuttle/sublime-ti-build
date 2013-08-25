@@ -18,6 +18,9 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         if len(folders) > 0:
             self.project_folder = folders[0]
             self.platforms = ["android", "ios", "mobileweb", "clean"]
+            if 'mrCmd' in globals():
+                self.platforms.append('most recent configuration')
+                #print(mrCmd)
             self.show_quick_panel(self.platforms, self.select_platform)
         else:
             self.show_quick_panel(["ERROR: Must have a project open"], None)
@@ -27,7 +30,9 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             return
         self.platform = self.platforms[select]
 
-        if self.platform == "ios":
+        if self.platform == "most recent configuration":
+            self.window.run_command("exec", {"cmd": mrCmd})
+        elif self.platform == "ios":
             self.targets = ["simulator", "device", "dist-appstore", "dist-adhoc"]
             self.show_quick_panel(self.targets, self.select_ios_target)
         elif self.platform == "android":
@@ -47,6 +52,8 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         if (self.iosVersion is not "unknown" and self.iosVersion is not ""):
             options.extend(["--ios-version", self.iosVersion])
         cmd.extend(options)
+        global mrCmd
+        mrCmd = cmd
         self.window.run_command("exec", {"cmd": cmd})
 
     #--------------------------------------------------------------
@@ -101,6 +108,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         if select < 0:
             return
         if (self.simtype[select] == 'non-retina'):
+            # iphone 4
             simulatorType = 'iphone'
             simulatorDisplay = ''
             simulatorHeight = ''
