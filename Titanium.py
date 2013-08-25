@@ -47,7 +47,6 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         if (self.iosVersion is not "unknown" and self.iosVersion is not ""):
             options.extend(["--ios-version", self.iosVersion])
         cmd.extend(options)
-        #print(cmd)
         self.window.run_command("exec", {"cmd": cmd})
 
     #--------------------------------------------------------------
@@ -102,7 +101,6 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         if select < 0:
             return
         if (self.simtype[select] == 'non-retina'):
-            # iphone 4
             simulatorType = 'iphone'
             simulatorDisplay = ''
             simulatorHeight = ''
