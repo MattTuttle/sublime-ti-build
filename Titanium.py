@@ -20,7 +20,6 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             self.platforms = ["android", "ios", "mobileweb", "clean"]
             if 'mrCmd' in globals():
                 self.platforms.append('most recent configuration')
-                #print(mrCmd)
             self.show_quick_panel(self.platforms, self.select_platform)
         else:
             self.show_quick_panel(["ERROR: Must have a project open"], None)
