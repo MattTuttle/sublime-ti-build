@@ -19,7 +19,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             self.project_folder = folders[0]
             self.platforms = ["android", "ios", "mobileweb", "clean"]
             if 'mrCmd' in globals():
-                self.platforms.append('most recent configuration')
+                self.platforms.insert(0, 'most recent configuration')
             self.show_quick_panel(self.platforms, self.select_platform)
         else:
             self.show_quick_panel(["ERROR: Must have a project open"], None)
@@ -116,7 +116,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             simulatorDisplay = self.simulatorDisplay
             simulatorHeight = ''
         else:
-            simulatorType = 'iphone'
+            simulatorType = self.simtype[select]
             simulatorDisplay = self.simulatorDisplay
             simulatorHeight = self.simulatorHeight
         self.run_titanium(["--sim-type", simulatorType, simulatorDisplay, simulatorHeight])
@@ -146,7 +146,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
 
         if self.target == "dist-adhoc":
             options.extend(["--output-dir", self.project_folder + "/dist"])
-    
+
         self.run_titanium(options)
 
     def load_ios_info(self):
