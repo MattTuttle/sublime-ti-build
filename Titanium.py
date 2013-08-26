@@ -18,6 +18,8 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         if len(folders) > 0:
             self.project_folder = folders[0]
             self.platforms = ["android", "ios", "mobileweb", "clean"]
+            if 'mrCmd' in globals():
+                self.platforms.append('most recent configuration')
             self.show_quick_panel(self.platforms, self.select_platform)
         else:
             self.show_quick_panel(["ERROR: Must have a project open"], None)
@@ -27,7 +29,9 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             return
         self.platform = self.platforms[select]
 
-        if self.platform == "ios":
+        if self.platform == "most recent configuration":
+            self.window.run_command("exec", {"cmd": mrCmd})
+        elif self.platform == "ios":
             self.targets = ["simulator", "device", "dist-appstore", "dist-adhoc"]
             self.show_quick_panel(self.targets, self.select_ios_target)
         elif self.platform == "android":
@@ -47,6 +51,8 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         if (self.iosVersion is not "unknown" and self.iosVersion is not ""):
             options.extend(["--ios-version", self.iosVersion])
         cmd.extend(options)
+        global mrCmd
+        mrCmd = cmd
         self.window.run_command("exec", {"cmd": cmd})
 
     #--------------------------------------------------------------
@@ -91,7 +97,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             return
         self.target = self.targets[select]
         if self.target == "simulator":
-            self.simtype = ["iphone", "ipad"]
+            self.simtype = ["non-retina", "retina", "retina-tall", "ipad"]
             self.show_quick_panel(self.simtype, self.select_ios_simtype)
         else:
             self.families = ["iphone", "ipad", "universal"]
@@ -100,7 +106,21 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
     def select_ios_simtype(self, select):
         if select < 0:
             return
-        self.run_titanium(["--sim-type", self.simtype[select], self.simulatorDisplay, self.simulatorHeight])
+        if (self.simtype[select] == 'non-retina'):
+            # iphone 4
+            simulatorType = 'iphone'
+            simulatorDisplay = ''
+            simulatorHeight = ''
+        elif (self.simtype[select] == "retina"):
+            simulatorType = 'iphone'
+            simulatorDisplay = self.simulatorDisplay
+            simulatorHeight = ''
+        else:
+            simulatorType = 'iphone'
+            simulatorDisplay = self.simulatorDisplay
+            simulatorHeight = self.simulatorHeight
+        self.run_titanium(["--sim-type", simulatorType, simulatorDisplay, simulatorHeight])
+
     def select_ios_family(self, select):
         if select < 0:
             return
