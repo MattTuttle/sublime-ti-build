@@ -8,18 +8,22 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
 
     def run(self, *args, **kwargs):
         settings = sublime.load_settings('Titanium.sublime-settings')
-        self.cli = settings.get("titaniumCLI", "/usr/local/bin/titanium")
-        self.android = settings.get("androidSDK", "/opt/android-sdk") + "/tools/android"
-        self.loggingLevel = settings.get("loggingLevel", "info")
+        self.cli              = settings.get("titaniumCLI", "/usr/local/bin/titanium")
+        self.android          = settings.get("androidSDK", "/opt/android-sdk") + "/tools/android"
+        self.loggingLevel     = settings.get("loggingLevel", "info")
         self.simulatorDisplay = str(settings.get("simulatorDisplay", "--retina"))
-        self.simulatorHeight = str(settings.get("simulatorHeight", "--tall"))
-        self.iosVersion = str(settings.get("iosVersion", "unknown"))
+        self.simulatorHeight  = str(settings.get("simulatorHeight", "--tall"))
+        self.iosVersion       = str(settings.get("iosVersion", "unknown"))
+
         folders = self.window.folders()
         if len(folders) > 0:
             self.project_folder = folders[0]
             self.platforms = ["android", "ios", "mobileweb", "clean"]
-            if 'mrCmd' in globals():
+
+            # only show most recent when there is a command stored
+            if 'titaniumMostRecent' in globals():
                 self.platforms.insert(0, 'most recent configuration')
+
             self.show_quick_panel(self.platforms, self.select_platform)
         else:
             self.show_quick_panel(["ERROR: Must have a project open"], None)
@@ -30,7 +34,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         self.platform = self.platforms[select]
 
         if self.platform == "most recent configuration":
-            self.window.run_command("exec", {"cmd": mrCmd})
+            self.window.run_command("exec", {"cmd": titaniumMostRecent})
         elif self.platform == "ios":
             self.targets = ["simulator", "device", "dist-appstore", "dist-adhoc"]
             self.show_quick_panel(self.targets, self.select_ios_target)
@@ -43,6 +47,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         else:  # clean project
             self.window.run_command("exec", {"cmd": [self.cli, "clean", "--no-colors", "--project-dir", self.project_folder]})
 
+    # Sublime Text 3 requires a short timeout between quick panels
     def show_quick_panel(self, options, done):
         sublime.set_timeout(lambda: self.window.show_quick_panel(options, done), 10)
 
@@ -51,8 +56,11 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         if (self.iosVersion is not "unknown" and self.iosVersion is not ""):
             options.extend(["--ios-version", self.iosVersion])
         cmd.extend(options)
-        global mrCmd
-        mrCmd = cmd
+
+        # save most recent command
+        global titaniumMostRecent
+        titaniumMostRecent = cmd
+
         self.window.run_command("exec", {"cmd": cmd})
 
     #--------------------------------------------------------------
