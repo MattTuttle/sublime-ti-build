@@ -18,6 +18,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         folders = self.window.folders()
         if len(folders) > 0:
             self.project_folder = folders[0]
+            self.project_sdk = self.get_project_sdk_version()
             self.platforms = ["android", "ios", "mobileweb", "clean"]
 
             # only show most recent when there is a command stored
@@ -51,8 +52,14 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
     def show_quick_panel(self, options, done):
         sublime.set_timeout(lambda: self.window.show_quick_panel(options, done), 10)
 
+    # get the current project's SDK from tiapp.xml
+    def get_project_sdk_version(self):
+        process = subprocess.Popen([self.cli, "project", "sdk-version", "--project-dir", self.project_folder, "--output=text"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result, error = process.communicate()
+        return result.decode('utf-8').rstrip('\n')
+
     def run_titanium(self, options=[]):
-        cmd = [self.cli, "build", "--project-dir", self.project_folder, "--no-colors", "--platform", self.platform, "--log-level", self.loggingLevel]
+        cmd = [self.cli, "build", "--sdk", self.project_sdk, "--project-dir", self.project_folder, "--no-colors", "--platform", self.platform, "--log-level", self.loggingLevel]
         if (self.iosVersion is not "unknown" and self.iosVersion is not ""):
             options.extend(["--ios-version", self.iosVersion])
         cmd.extend(options)
