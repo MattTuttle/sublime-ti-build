@@ -16,18 +16,61 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         self.iosVersion       = str(settings.get("iosVersion", "unknown"))
 
         folders = self.window.folders()
-        if len(folders) > 0:
-            self.project_folder = folders[0]
-            self.project_sdk = self.get_project_sdk_version()
-            self.platforms = ["android", "ios", "mobileweb", "clean"]
-
-            # only show most recent when there is a command stored
-            if 'titaniumMostRecent' in globals():
-                self.platforms.insert(0, 'most recent configuration')
-
-            self.show_quick_panel(self.platforms, self.select_platform)
-        else:
+        if len(folders) <= 0:
             self.show_quick_panel(["ERROR: Must have a project open"], None)
+        else:
+            if len(folders) == 1:
+                self.multipleFolders = False
+                self.project_folder = folders[0]
+                self.project_sdk = self.get_project_sdk_version()
+                self.pick_platform()
+            else:
+                self.multipleFolders = True
+                self.pick_project_folder(folders)
+
+    def pick_project_folder(self, folders):
+        folderNames = []
+        for folder in folders:
+            index = folder.rfind('/') + 1
+            if index > 0:
+                folderNames.append(folder[index:])
+            else:
+                folderNames.append(folder)
+
+        # only show most recent when there is a command stored
+        if 'titaniumMostRecent' in globals():
+            folderNames.insert(0, 'most recent configuration')
+
+        self.show_quick_panel(folderNames, self.select_project)
+
+    def select_project(self, select):
+        folders = self.window.folders()
+        if select < 0:
+            return
+
+        # if most recent was an option, we need subtract 1
+        # from the selected index to match the folders array
+        # since the "most recent" option was inserted at the beginning
+        if 'titaniumMostRecent' in globals():
+            select = select - 1
+
+        if select == -1:
+            self.window.run_command("exec", {"cmd": titaniumMostRecent})
+        else:
+            self.project_folder = folders[select]
+            self.project_sdk = self.get_project_sdk_version()
+            self.pick_platform()
+
+
+    def pick_platform(self):
+        self.platforms = ["android", "ios", "mobileweb", "clean"]
+
+        # only show most recent when there are NOT multiple top level folders
+        # and there is a command stored
+        if self.multipleFolders == False and 'titaniumMostRecent' in globals():
+            self.platforms.insert(0, 'most recent configuration')
+
+        self.show_quick_panel(self.platforms, self.select_platform)
 
     def select_platform(self, select):
         if select < 0:
