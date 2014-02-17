@@ -2,18 +2,20 @@ import sublime
 import sublime_plugin
 import json
 import subprocess
-
+#from pprint import pprint
 
 class TitaniumCommand(sublime_plugin.WindowCommand):
 
     def run(self, *args, **kwargs):
         settings = sublime.load_settings('Titanium.sublime-settings')
-        self.cli              = settings.get("titaniumCLI", "/usr/local/bin/titanium")
+        self.cli              = settings.get("titaniumCLI", "/usr/bin/titanium")
         self.android          = settings.get("androidSDK", "/opt/android-sdk") + "/tools/android"
         self.loggingLevel     = settings.get("loggingLevel", "info")
-        self.simulatorDisplay = str(settings.get("simulatorDisplay", "--retina"))
-        self.simulatorHeight  = str(settings.get("simulatorHeight", "--tall"))
-        self.iosVersion       = str(settings.get("iosVersion", "unknown"))
+        self.simulatorDisplay = str(settings.get("simulatorDisplay", ""))
+        self.simulatorHeight  = str(settings.get("simulatorHeight", ""))
+        self.iosVersion       = str(settings.get("iosVersion", "7.0"))  #7.0
+        self.iosSimVersion    = str(settings.get("iosSimVersion", "6.1"))  #7.0, 6.1, 5.0
+        self.genymotionCLI    = str(settings.get("genymotionCLI", "/Applications/Genymotion Shell.app/Contents/MacOS/genyshell"))
 
         folders = self.window.folders()
         if len(folders) <= 0:
@@ -83,7 +85,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             self.targets = ["simulator", "device", "dist-appstore", "dist-adhoc"]
             self.show_quick_panel(self.targets, self.select_ios_target)
         elif self.platform == "android":
-            self.targets = ["emulator", "device", "dist-playstore"]
+            self.targets = ["GenyMotion", "emulator", "device", "dist-playstore"]
             self.show_quick_panel(self.targets, self.select_android_target)
         elif self.platform == "mobileweb":
             self.targets = ["development", "production"]
@@ -103,8 +105,22 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
 
     def run_titanium(self, options=[]):
         cmd = [self.cli, "build", "--sdk", self.project_sdk, "--project-dir", self.project_folder, "--no-colors", "--platform", self.platform, "--log-level", self.loggingLevel]
+        
         if (self.iosVersion is not "unknown" and self.iosVersion is not ""):
             options.extend(["--ios-version", self.iosVersion])
+
+        if (self.iosSimVersion is not "unknown" and self.iosSimVersion is not ""):
+            options.extend(["--sim-version", self.iosSimVersion])
+        cmd.extend(options)
+
+        # save most recent command
+        global titaniumMostRecent
+        titaniumMostRecent = cmd
+
+        self.window.run_command("exec", {"cmd": cmd})
+
+    def run_genymotion(self, options=[]):
+        cmd = [self.cli, "build", "--sdk", self.project_sdk, "--project-dir", self.project_folder, "--no-colors", "--platform", self.platform, "--log-level", self.loggingLevel]
         cmd.extend(options)
 
         # save most recent command
@@ -131,6 +147,21 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         result, error = process.communicate()
         self.avds = result.split()
 
+    def load_genymotion_vms(self):
+        cmd = '"' + self.genymotionCLI + '" -c "devices list" | grep ^[[:space:]] | grep [0-9] | grep "On" | awk -F\'|\' \'{ip=gsub(/^[ \\t]+|[ \\t]+$/, "", $5); name=gsub(/^[ \\t]+|[ \\t]+$/, "", $6); print $5","$6}\''
+        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        result, error = process.communicate()
+        
+        if result != '' and result != None:
+            l = []
+            for a in result.splitlines():
+                ip = a.split(',')[0]
+                name = a.split(',')[1]
+                l.append([name, ip])
+            self.genymotionvms = l
+        else:
+            sublime.error_message("No running GenyMotion devices found")
+
     def select_android_target(self, select):
         if select < 0:
             return
@@ -138,6 +169,9 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         if (target == "emulator"):
             self.load_android_avds()
             self.show_quick_panel(self.avds, self.select_android_avd)
+        elif (target == "GenyMotion"):
+            self.load_genymotion_vms();
+            self.show_quick_panel(self.genymotionvms, self.select_genymotion_vm)
         else:
             self.run_titanium(["--target", target])
 
@@ -145,6 +179,12 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         if select < 0:
             return
         self.run_titanium(["--avd-id", self.avds[select]])
+
+    def select_genymotion_vm(self, select):
+        if select < 0:
+            return
+        self.genymotionname, self.genymotionip = self.genymotionvms[select]
+        self.run_genymotion(["--device-id", self.genymotionname])
 
     #--------------------------------------------------------------
     # IOS
@@ -155,7 +195,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             return
         self.target = self.targets[select]
         if self.target == "simulator":
-            self.simtype = ["non-retina", "retina", "retina-tall", "ipad"]
+            self.simtype = ["iphone", "iphone-retina", "iphone-retina-tall", "ipad", "ipad-retina", "ipad-retina-tall"]
             self.show_quick_panel(self.simtype, self.select_ios_simtype)
         else:
             self.families = ["iphone", "ipad", "universal"]
@@ -164,20 +204,44 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
     def select_ios_simtype(self, select):
         if select < 0:
             return
-        if (self.simtype[select] == 'non-retina'):
+        if (self.simtype[select] == 'iphone'):
             # iphone 4
             simulatorType = 'iphone'
             simulatorDisplay = ''
             simulatorHeight = ''
-        elif (self.simtype[select] == "retina"):
+        elif (self.simtype[select] == "iphone-retina"):
             simulatorType = 'iphone'
-            simulatorDisplay = self.simulatorDisplay
+            simulatorDisplay = '--retina'
             simulatorHeight = ''
-        else:
+        elif (self.simtype[select] == "iphone-retina-tall"):
+            simulatorType = 'iphone'
+            simulatorDisplay = '--retina'
+            simulatorHeight = '--tall'
+        elif (self.simtype[select] == "ipad-retina"):
+            simulatorType = 'ipad'
+            simulatorDisplay = '--retina'
+            simulatorHeight = ''
+        elif (self.simtype[select] == "ipad-retina-tall"):
+            simulatorType = 'ipad'
+            simulatorDisplay = '--retina'
+            simulatorHeight = '--tall'
+        elif (self.simtype[select] == "ipad"):
             simulatorType = self.simtype[select]
             simulatorDisplay = self.simulatorDisplay
             simulatorHeight = self.simulatorHeight
-        self.run_titanium(["--sim-type", simulatorType, simulatorDisplay, simulatorHeight])
+        
+        self.simulatorType = simulatorType
+        self.simulatorDisplay = simulatorDisplay
+        self.simulatorHeight = simulatorHeight
+
+        self.simvers = ["7.0", "6.1", "5.0"]
+        self.show_quick_panel(self.simvers, self.select_ios_simversion)
+
+    def select_ios_simversion(self, select):
+        if select < 0:
+            return
+        self.iosSimVersion = self.simvers[select]
+        self.run_titanium(["--sim-type", self.simulatorType, self.simulatorDisplay, self.simulatorHeight])    
 
     def select_ios_family(self, select):
         if select < 0:
@@ -190,6 +254,12 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         if select < 0:
             return
         self.cert = self.certs[select]
+        self.show_quick_panel(self.devices, self.select_ios_device)
+
+    def select_ios_device(self, select):
+        if select < 0:
+            return
+        self.devicename, self.deviceudid = self.devices[select]
         self.show_quick_panel(self.profiles, self.select_ios_profile)
 
     def select_ios_profile(self, select):
@@ -197,8 +267,10 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             return
         name, profile = self.profiles[select]
         options = ["--target", self.target, "--pp-uuid", profile, "--device-family", self.family]
+
         if self.target == "device":
-            options.extend(["--developer-name", self.cert])
+            options.extend(["--developer-name", self.cert[0]])
+            options.extend(["--device-id", self.deviceudid])
         else:
             options.extend(["--distribution-name", self.cert])
 
@@ -211,20 +283,28 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         process = subprocess.Popen([self.cli, "info", "--types", "ios", "--output", "json"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         result, error = process.communicate()
         info = json.loads(result.decode('utf-8'))
-        for name, obj in list(info.items()):
-            if name == "iosCerts":
-                for target, c in list(obj.items()):
-                    if target == "wwdr" or (target == "devNames" and self.target != "device") or (target == "distNames" and self.target == "device"):
+        
+        for name, obj in list(info["ios"].items()):
+            if name == "certs":
+                for target, c in list(obj["keychains"]["/Users/stevensenior/Library/Keychains/login.keychain"].items()):
+                    if target == "wwdr" or (target == "developer" and self.target != "device") or (target == "distribution" and self.target == "device"):
                         continue
                     l = []
                     for cert in c:
-                        l.append(cert)
+                        if cert['expired'] is False:
+                            l.append([cert['name']])
                     self.certs = l
-            elif name == "iOSProvisioningProfiles":
+            elif name == "provisioningProfiles":
                 for target, p in list(obj.items()):
                     # TODO: figure out what to do with enterprise profiles
                     if (target == "development" and self.target == "device") or (target == "distribution" and self.target == "dist-appstore") or (target == "adhoc" and self.target == "dist-adhoc"):
                         l = []
                         for profile in p:
-                            l.append([profile['name'], profile['uuid']])
+                            if profile['expired'] is False:
+                                l.append([profile['name'], profile['uuid']])
                         self.profiles = l
+            elif name == "devices":
+                l = []
+                for a in obj:
+                    l.append([a['name'], a['udid']])
+                self.devices = l

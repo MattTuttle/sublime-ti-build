@@ -1,14 +1,14 @@
 {
 	// Path to the Titanium CLI
-	"titaniumCLI": "/usr/local/bin/titanium",
+	"titaniumCLI": "/usr/bin/titanium",
 	// Logging Level [trace, debug, info, warn, error]
 	"loggingLevel": "info",
 	// Path to the android sdk
-	"androidSDK": "/opt/android-sdk",
+	"androidSDK": "~/Library/android-sdk-macosx",
 	// Extra Settings for the iOS Simulator
 	// If you dont want to set them, make the values empty
-	"simulatorDisplay": "--retina",
-	"simulatorHeight": "--tall",
-	"iosVersion": "" //eg. 6.1
-	
+	//"simulatorDisplay": "",
+	//"simulatorHeight": "",
+	//"iosVersion": "" //eg. 6.1
+	"genymotionCLI": "/Applications/Genymotion Shell.app/Contents/MacOS/genyshell"
 }
