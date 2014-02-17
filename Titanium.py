@@ -2,7 +2,7 @@ import sublime
 import sublime_plugin
 import json
 import subprocess
-#from pprint import pprint
+from os.path import expanduser
 
 class TitaniumCommand(sublime_plugin.WindowCommand):
 
@@ -286,7 +286,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         
         for name, obj in list(info["ios"].items()):
             if name == "certs":
-                for target, c in list(obj["keychains"]["/Users/stevensenior/Library/Keychains/login.keychain"].items()):
+                for target, c in list(obj["keychains"][expanduser("~") + "/Library/Keychains/login.keychain"].items()):
                     if target == "wwdr" or (target == "developer" and self.target != "device") or (target == "distribution" and self.target == "device"):
                         continue
                     l = []
