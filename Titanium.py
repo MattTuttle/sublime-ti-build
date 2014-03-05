@@ -14,7 +14,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         self.simulatorDisplay = str(settings.get("simulatorDisplay", ""))
         self.simulatorHeight  = str(settings.get("simulatorHeight", ""))
         self.iosVersion       = str(settings.get("iosVersion", "7.0"))  #7.0
-        self.iosSimVersion    = str(settings.get("iosSimVersion", "6.1"))  #7.0, 6.1, 5.0
+        self.iosSimVersion    = str(settings.get("iosSimVersion", "6.1"))  #7.0.3, 7.0, 6.1, 5.0
         self.genymotionCLI    = str(settings.get("genymotionCLI", "/Applications/Genymotion Shell.app/Contents/MacOS/genyshell"))
 
         folders = self.window.folders()
@@ -105,7 +105,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
 
     def run_titanium(self, options=[]):
         cmd = [self.cli, "build", "--sdk", self.project_sdk, "--project-dir", self.project_folder, "--no-colors", "--platform", self.platform, "--log-level", self.loggingLevel]
-        
+
         if (self.iosVersion is not "unknown" and self.iosVersion is not ""):
             options.extend(["--ios-version", self.iosVersion])
 
@@ -151,7 +151,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         cmd = '"' + self.genymotionCLI + '" -c "devices list" | grep ^[[:space:]] | grep [0-9] | grep "On" | awk -F\'|\' \'{ip=gsub(/^[ \\t]+|[ \\t]+$/, "", $5); name=gsub(/^[ \\t]+|[ \\t]+$/, "", $6); print $5","$6}\''
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
         result, error = process.communicate()
-        
+
         if result != '' and result != None:
             l = []
             for a in result.splitlines():
@@ -229,19 +229,19 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             simulatorType = self.simtype[select]
             simulatorDisplay = self.simulatorDisplay
             simulatorHeight = self.simulatorHeight
-        
+
         self.simulatorType = simulatorType
         self.simulatorDisplay = simulatorDisplay
         self.simulatorHeight = simulatorHeight
 
-        self.simvers = ["7.0", "6.1", "5.0"]
+        self.simvers = ["7.0.3", "7.0", "6.1", "5.0"]
         self.show_quick_panel(self.simvers, self.select_ios_simversion)
 
     def select_ios_simversion(self, select):
         if select < 0:
             return
         self.iosSimVersion = self.simvers[select]
-        self.run_titanium(["--sim-type", self.simulatorType, self.simulatorDisplay, self.simulatorHeight])    
+        self.run_titanium(["--sim-type", self.simulatorType, self.simulatorDisplay, self.simulatorHeight])
 
     def select_ios_family(self, select):
         if select < 0:
@@ -283,7 +283,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         process = subprocess.Popen([self.cli, "info", "--types", "ios", "--output", "json"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         result, error = process.communicate()
         info = json.loads(result.decode('utf-8'))
-        
+
         for name, obj in list(info["ios"].items()):
             if name == "certs":
                 for target, c in list(obj["keychains"][expanduser("~") + "/Library/Keychains/login.keychain"].items()):
