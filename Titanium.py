@@ -13,7 +13,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         self.loggingLevel     = settings.get("loggingLevel", "info")
         self.simulatorDisplay = str(settings.get("simulatorDisplay", ""))
         self.simulatorHeight  = str(settings.get("simulatorHeight", ""))
-        self.iosVersion       = str(settings.get("iosVersion", "7.0"))  #7.0
+        self.iosVersion       = str(settings.get("iosVersion", "7.1"))  #7.1
         self.iosSimVersion    = str(settings.get("iosSimVersion", "6.1"))  #7.0.3, 7.0, 6.1, 5.0
         self.genymotionCLI    = str(settings.get("genymotionCLI", "/Applications/Genymotion Shell.app/Contents/MacOS/genyshell"))
 
@@ -234,7 +234,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         self.simulatorDisplay = simulatorDisplay
         self.simulatorHeight = simulatorHeight
 
-        self.simvers = ["7.0.3", "7.0", "6.1", "5.0"]
+        self.simvers = ["7.1", "7.0.3", "7.0", "6.1", "5.0"]
         self.show_quick_panel(self.simvers, self.select_ios_simversion)
 
     def select_ios_simversion(self, select):
