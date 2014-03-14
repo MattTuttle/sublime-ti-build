@@ -13,8 +13,8 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         self.loggingLevel     = settings.get("loggingLevel", "info")
         self.simulatorDisplay = str(settings.get("simulatorDisplay", ""))
         self.simulatorHeight  = str(settings.get("simulatorHeight", ""))
-        self.iosVersion       = str(settings.get("iosVersion", "7.0"))  #7.0
-        self.iosSimVersion    = str(settings.get("iosSimVersion", "6.1"))  #7.0.3, 7.0, 6.1, 5.0
+        self.iosVersion       = str(settings.get("iosVersion", ""))
+        self.iosSimVersion    = str(settings.get("iosSimVersion", ""))
         self.genymotionCLI    = str(settings.get("genymotionCLI", "/Applications/Genymotion Shell.app/Contents/MacOS/genyshell"))
 
         folders = self.window.folders()
@@ -106,11 +106,21 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
     def run_titanium(self, options=[]):
         cmd = [self.cli, "build", "--sdk", self.project_sdk, "--project-dir", self.project_folder, "--no-colors", "--platform", self.platform, "--log-level", self.loggingLevel]
 
+        project_sdk = self.project_sdk.split('.')
+
         if (self.iosVersion is not "unknown" and self.iosVersion is not ""):
-            options.extend(["--ios-version", self.iosVersion])
+            if int(project_sdk[0]) < 3 or int(project_sdk[1]) < 2:
+                ios_version = self.iosVersion.split('.')
+                options.extend(["--ios-version", ios_version[0] + "." + ios_version[1]])
+            else:
+                options.extend(["--ios-version", self.iosVersion])
 
         if (self.iosSimVersion is not "unknown" and self.iosSimVersion is not ""):
-            options.extend(["--sim-version", self.iosSimVersion])
+            if int(project_sdk[0]) < 3 or int(project_sdk[1]) < 2:
+                sim_version = self.iosSimVersion.split('.')
+                options.extend(["--sim-version", sim_version[0] + "." + sim_version[1]])
+            else:
+                options.extend(["--sim-version", self.iosSimVersion])
         cmd.extend(options)
 
         # save most recent command
@@ -234,8 +244,22 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         self.simulatorDisplay = simulatorDisplay
         self.simulatorHeight = simulatorHeight
 
-        self.simvers = ["7.0.3", "7.0", "6.1", "5.0"]
-        self.show_quick_panel(self.simvers, self.select_ios_simversion)
+        self.load_ios_sdk_info()
+
+        sdk_version_list = []
+        for sdk_version in self.sdkvers:
+            sdk_version_list.append("iOS SDK: " + sdk_version)
+
+        self.show_quick_panel(sdk_version_list, self.select_ios_sdkversion)
+
+    def select_ios_sdkversion(self, select):
+        if select < 0:
+            return
+        self.iosVersion = self.sdkvers[select]
+        sim_version_list = []
+        for sim_version in self.simvers:
+            sim_version_list.append("iOS Simulator: " + sim_version)
+        self.show_quick_panel(sim_version_list, self.select_ios_simversion)
 
     def select_ios_simversion(self, select):
         if select < 0:
@@ -278,6 +302,15 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             options.extend(["--output-dir", self.project_folder + "/dist"])
 
         self.run_titanium(options)
+
+    def load_ios_sdk_info(self):
+        process = subprocess.Popen([self.cli, "info", "--types", "ios", "--output", "json"], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        result, error = process.communicate()
+        info = json.loads(result.decode('utf-8'))
+
+        for name, obj in list(info["xcode"].items()):
+            self.sdkvers = obj["sdks"]
+            self.simvers = obj["sims"]
 
     def load_ios_info(self):
         process = subprocess.Popen([self.cli, "info", "--types", "ios", "--output", "json"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
