@@ -6,9 +6,16 @@
 	// Path to the android sdk
 	"androidSDK": "~/Library/android-sdk-macosx",
 	// Extra Settings for the iOS Simulator
-	// If you dont want to set them, make the values empty
-	//"simulatorDisplay": "",
-	//"simulatorHeight": "",
-	//"iosVersion": "" //eg. 6.1
+	// If you dont want to set them, make the values false
+	// simulatorType - This will override the selection popup, value can be "iphone", "ipad" or false
+	"simulatorType": false,
+	// This will override the selection popup, value can be true or false
+	"simulatorRetina": false,
+	// This will override the selection popup, value can be true or false
+	"simulatorTall": false,
+	// This will override the selection popup, value can be any version of the iOS SDK you have installed or false
+	"iosVersion": false,
+	// This will override the selection popup, value can be any version of the iOS Simulator you have installed or false
+	"iosSimVersion": false,
 	"genymotionCLI": "/Applications/Genymotion Shell.app/Contents/MacOS/genyshell"
 }

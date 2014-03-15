@@ -11,10 +11,11 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         self.cli              = settings.get("titaniumCLI", "/usr/bin/titanium")
         self.android          = settings.get("androidSDK", "/opt/android-sdk") + "/tools/android"
         self.loggingLevel     = settings.get("loggingLevel", "info")
-        self.simulatorDisplay = str(settings.get("simulatorDisplay", ""))
-        self.simulatorHeight  = str(settings.get("simulatorHeight", ""))
-        self.iosVersion       = str(settings.get("iosVersion", ""))
-        self.iosSimVersion    = str(settings.get("iosSimVersion", ""))
+        self.simulatorType    = settings.get("simulatorType", False)
+        self.simulatorRetina  = settings.get("simulatorRetina", False)
+        self.simulatorTall    = settings.get("simulatorTall", False)
+        self.iosVersion       = settings.get("iosVersion", False)
+        self.iosSimVersion    = settings.get("iosSimVersion", False)
         self.genymotionCLI    = str(settings.get("genymotionCLI", "/Applications/Genymotion Shell.app/Contents/MacOS/genyshell"))
 
         folders = self.window.folders()
@@ -204,68 +205,89 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         if select < 0:
             return
         self.target = self.targets[select]
+        self.load_ios_sdk_info()
         if self.target == "simulator":
-            self.simtype = ["iphone", "iphone-retina", "iphone-retina-tall", "ipad", "ipad-retina", "ipad-retina-tall"]
-            self.show_quick_panel(self.simtype, self.select_ios_simtype)
+            self.prompt_ios_simtype()
         else:
             self.families = ["iphone", "ipad", "universal"]
             self.show_quick_panel(self.families, self.select_ios_family)
+
+    def prompt_ios_simtype(self):
+        if not self.simulatorType:
+            self.simtype = ["iphone", "iphone-retina", "iphone-retina-tall", "ipad", "ipad-retina", "ipad-retina-tall"]
+            self.show_quick_panel(self.simtype, self.select_ios_simtype)
+        else:
+            self.prompt_ios_sdkversion()
 
     def select_ios_simtype(self, select):
         if select < 0:
             return
         if (self.simtype[select] == 'iphone'):
             # iphone 4
-            simulatorType = 'iphone'
-            simulatorDisplay = ''
-            simulatorHeight = ''
+            self.simulatorType = 'iphone'
+            self.simulatorRetina = False
+            self.simulatorTall = False
         elif (self.simtype[select] == "iphone-retina"):
-            simulatorType = 'iphone'
-            simulatorDisplay = '--retina'
-            simulatorHeight = ''
+            self.simulatorType = 'iphone'
+            self.simulatorRetina = True
+            self.simulatorTall = False
         elif (self.simtype[select] == "iphone-retina-tall"):
-            simulatorType = 'iphone'
-            simulatorDisplay = '--retina'
-            simulatorHeight = '--tall'
-        elif (self.simtype[select] == "ipad-retina"):
-            simulatorType = 'ipad'
-            simulatorDisplay = '--retina'
-            simulatorHeight = ''
-        elif (self.simtype[select] == "ipad-retina-tall"):
-            simulatorType = 'ipad'
-            simulatorDisplay = '--retina'
-            simulatorHeight = '--tall'
+            self.simulatorType = 'iphone'
+            self.simulatorRetina = True
+            self.simulatorTall = True
         elif (self.simtype[select] == "ipad"):
-            simulatorType = self.simtype[select]
-            simulatorDisplay = self.simulatorDisplay
-            simulatorHeight = self.simulatorHeight
+            self.simulatorType = 'ipad'
+            self.simulatorRetina = False
+            self.simulatorTall = False
+        elif (self.simtype[select] == "ipad-retina"):
+            self.simulatorType = 'ipad'
+            self.simulatorRetina = True
+            self.simulatorTall = False
+        elif (self.simtype[select] == "ipad-retina-tall"):
+            self.simulatorType = 'ipad'
+            self.simulatorRetina = True
+            self.simulatorTall = True
 
-        self.simulatorType = simulatorType
-        self.simulatorDisplay = simulatorDisplay
-        self.simulatorHeight = simulatorHeight
+        self.prompt_ios_sdkversion()
 
-        self.load_ios_sdk_info()
-
-        sdk_version_list = []
-        for sdk_version in self.sdkvers:
-            sdk_version_list.append("iOS SDK: " + sdk_version)
-
-        self.show_quick_panel(sdk_version_list, self.select_ios_sdkversion)
+    def prompt_ios_sdkversion(self):
+        if not self.iosVersion:
+            sdk_version_list = []
+            for sdk_version in self.sdkvers:
+                sdk_version_list.append("iOS SDK: " + sdk_version)
+            self.show_quick_panel(sdk_version_list, self.select_ios_sdkversion)
+        else:
+            self.prompt_ios_simversion()
 
     def select_ios_sdkversion(self, select):
         if select < 0:
             return
         self.iosVersion = self.sdkvers[select]
-        sim_version_list = []
-        for sim_version in self.simvers:
-            sim_version_list.append("iOS Simulator: " + sim_version)
-        self.show_quick_panel(sim_version_list, self.select_ios_simversion)
+        self.prompt_ios_simversion()
+
+    def prompt_ios_simversion(self):
+        if not self.iosSimVersion:
+            sim_version_list = []
+            for sim_version in self.simvers:
+                sim_version_list.append("iOS Simulator: " + sim_version)
+            self.show_quick_panel(sim_version_list, self.select_ios_simversion)
+        else: 
+            self.run_ios_simulator()
 
     def select_ios_simversion(self, select):
         if select < 0:
             return
         self.iosSimVersion = self.simvers[select]
-        self.run_titanium(["--sim-type", self.simulatorType, self.simulatorDisplay, self.simulatorHeight])
+        self.run_ios_simulator()
+
+    def run_ios_simulator(self):
+        simulatorDisplay = ''
+        simulatorHeight = ''
+        if self.simulatorRetina:
+            simulatorDisplay = '--retina'
+        if self.simulatorTall:
+            simulatorHeight = '--tall'
+        self.run_titanium(["--sim-type", self.simulatorType, simulatorDisplay, simulatorHeight])
 
     def select_ios_family(self, select):
         if select < 0:
