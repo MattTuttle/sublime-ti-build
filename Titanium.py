@@ -309,8 +309,8 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         info = json.loads(result.decode('utf-8'))
 
         for name, obj in list(info["xcode"].items()):
-            self.sdkvers = obj["sdks"]
-            self.simvers = obj["sims"]
+            self.sdkvers = sorted(obj["sdks"], reverse = True)
+            self.simvers = sorted(obj["sims"], reverse = True)
 
     def load_ios_info(self):
         process = subprocess.Popen([self.cli, "info", "--types", "ios", "--output", "json"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
