@@ -252,10 +252,13 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
 
     def prompt_ios_sdkversion(self):
         if not self.iosVersion:
-            sdk_version_list = []
-            for sdk_version in self.sdkvers:
-                sdk_version_list.append("iOS SDK: " + sdk_version)
-            self.show_quick_panel(sdk_version_list, self.select_ios_sdkversion)
+            if len(self.sdkvers) == 1:
+                self.select_ios_sdkversion(0)
+            else:
+                sdk_version_list = []
+                for sdk_version in self.sdkvers:
+                    sdk_version_list.append("iOS SDK: " + sdk_version)
+                self.show_quick_panel(sdk_version_list, self.select_ios_sdkversion)
         else:
             self.prompt_ios_simversion()
 
@@ -267,10 +270,13 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
 
     def prompt_ios_simversion(self):
         if not self.iosSimVersion:
-            sim_version_list = []
-            for sim_version in self.simvers:
-                sim_version_list.append("iOS Simulator: " + sim_version)
-            self.show_quick_panel(sim_version_list, self.select_ios_simversion)
+            if len(self.simvers) == 1:
+                self.select_ios_simversion(0)
+            else:
+                sim_version_list = []
+                for sim_version in self.simvers:
+                    sim_version_list.append("iOS Simulator: " + sim_version)
+                self.show_quick_panel(sim_version_list, self.select_ios_simversion)
         else: 
             self.run_ios_simulator()
 
