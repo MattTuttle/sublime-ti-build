@@ -17,5 +17,7 @@
 	"iosVersion": false,
 	// This will override the selection popup, value can be any version of the iOS Simulator you have installed or false
 	"iosSimVersion": false,
+	// This can be used to load up a TiInspector host for iOS debugging, value can be host url (e.g. localhost:8999) or false
+	"tiInspectorHost": false,
 	"genymotionCLI": "/Applications/Genymotion Shell.app/Contents/MacOS/genyshell"
 }

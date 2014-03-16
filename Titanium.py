@@ -16,6 +16,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         self.simulatorTall    = settings.get("simulatorTall", False)
         self.iosVersion       = settings.get("iosVersion", False)
         self.iosSimVersion    = settings.get("iosSimVersion", False)
+        self.tiInspectorHost  = settings.get("tiInspectorHost", False)
         self.genymotionCLI    = str(settings.get("genymotionCLI", "/Applications/Genymotion Shell.app/Contents/MacOS/genyshell"))
 
         folders = self.window.folders()
@@ -289,11 +290,14 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
     def run_ios_simulator(self):
         simulatorDisplay = ''
         simulatorHeight = ''
+        tiInspector = ''
         if self.simulatorRetina:
             simulatorDisplay = '--retina'
         if self.simulatorTall:
             simulatorHeight = '--tall'
-        self.run_titanium(["--sim-type", self.simulatorType, simulatorDisplay, simulatorHeight])
+        if self.tiInspectorHost:
+            tiInspector = '--debug-host %s' % self.tiInspectorHost
+        self.run_titanium(["--sim-type", self.simulatorType, simulatorDisplay, simulatorHeight, tiInspector])
 
     def select_ios_family(self, select):
         if select < 0:
