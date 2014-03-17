@@ -11,10 +11,12 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         self.cli              = settings.get("titaniumCLI", "/usr/bin/titanium")
         self.android          = settings.get("androidSDK", "/opt/android-sdk") + "/tools/android"
         self.loggingLevel     = settings.get("loggingLevel", "info")
-        self.simulatorDisplay = str(settings.get("simulatorDisplay", ""))
-        self.simulatorHeight  = str(settings.get("simulatorHeight", ""))
-        self.iosVersion       = str(settings.get("iosVersion", "7.1"))  #7.1
-        self.iosSimVersion    = str(settings.get("iosSimVersion", "6.1"))  #7.0.3, 7.0, 6.1, 5.0
+        self.simulatorType    = settings.get("simulatorType", False)
+        self.simulatorRetina  = settings.get("simulatorRetina", False)
+        self.simulatorTall    = settings.get("simulatorTall", False)
+        self.iosVersion       = settings.get("iosVersion", False)
+        self.iosSimVersion    = settings.get("iosSimVersion", False)
+        self.tiInspectorHost  = settings.get("tiInspectorHost", False)
         self.genymotionCLI    = str(settings.get("genymotionCLI", "/Applications/Genymotion Shell.app/Contents/MacOS/genyshell"))
 
         folders = self.window.folders()
@@ -106,11 +108,21 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
     def run_titanium(self, options=[]):
         cmd = [self.cli, "build", "--sdk", self.project_sdk, "--project-dir", self.project_folder, "--no-colors", "--platform", self.platform, "--log-level", self.loggingLevel]
 
+        project_sdk = self.project_sdk.split('.')
+
         if (self.iosVersion is not "unknown" and self.iosVersion is not ""):
-            options.extend(["--ios-version", self.iosVersion])
+            if int(project_sdk[0]) < 3 or int(project_sdk[1]) < 2:
+                ios_version = self.iosVersion.split('.')
+                options.extend(["--ios-version", ios_version[0] + "." + ios_version[1]])
+            else:
+                options.extend(["--ios-version", self.iosVersion])
 
         if (self.iosSimVersion is not "unknown" and self.iosSimVersion is not ""):
-            options.extend(["--sim-version", self.iosSimVersion])
+            if int(project_sdk[0]) < 3 or int(project_sdk[1]) < 2:
+                sim_version = self.iosSimVersion.split('.')
+                options.extend(["--sim-version", sim_version[0] + "." + sim_version[1]])
+            else:
+                options.extend(["--sim-version", self.iosSimVersion])
         cmd.extend(options)
 
         # save most recent command
@@ -194,54 +206,98 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         if select < 0:
             return
         self.target = self.targets[select]
+        self.load_ios_sdk_info()
         if self.target == "simulator":
-            self.simtype = ["iphone", "iphone-retina", "iphone-retina-tall", "ipad", "ipad-retina", "ipad-retina-tall"]
-            self.show_quick_panel(self.simtype, self.select_ios_simtype)
+            self.prompt_ios_simtype()
         else:
             self.families = ["iphone", "ipad", "universal"]
             self.show_quick_panel(self.families, self.select_ios_family)
+
+    def prompt_ios_simtype(self):
+        if not self.simulatorType:
+            self.simtype = ["iphone", "iphone-retina", "iphone-retina-tall", "ipad", "ipad-retina", "ipad-retina-tall"]
+            self.show_quick_panel(self.simtype, self.select_ios_simtype)
+        else:
+            self.prompt_ios_sdkversion()
 
     def select_ios_simtype(self, select):
         if select < 0:
             return
         if (self.simtype[select] == 'iphone'):
             # iphone 4
-            simulatorType = 'iphone'
-            simulatorDisplay = ''
-            simulatorHeight = ''
+            self.simulatorType = 'iphone'
+            self.simulatorRetina = False
+            self.simulatorTall = False
         elif (self.simtype[select] == "iphone-retina"):
-            simulatorType = 'iphone'
-            simulatorDisplay = '--retina'
-            simulatorHeight = ''
+            self.simulatorType = 'iphone'
+            self.simulatorRetina = True
+            self.simulatorTall = False
         elif (self.simtype[select] == "iphone-retina-tall"):
-            simulatorType = 'iphone'
-            simulatorDisplay = '--retina'
-            simulatorHeight = '--tall'
-        elif (self.simtype[select] == "ipad-retina"):
-            simulatorType = 'ipad'
-            simulatorDisplay = '--retina'
-            simulatorHeight = ''
-        elif (self.simtype[select] == "ipad-retina-tall"):
-            simulatorType = 'ipad'
-            simulatorDisplay = '--retina'
-            simulatorHeight = '--tall'
+            self.simulatorType = 'iphone'
+            self.simulatorRetina = True
+            self.simulatorTall = True
         elif (self.simtype[select] == "ipad"):
-            simulatorType = self.simtype[select]
-            simulatorDisplay = self.simulatorDisplay
-            simulatorHeight = self.simulatorHeight
+            self.simulatorType = 'ipad'
+            self.simulatorRetina = False
+            self.simulatorTall = False
+        elif (self.simtype[select] == "ipad-retina"):
+            self.simulatorType = 'ipad'
+            self.simulatorRetina = True
+            self.simulatorTall = False
+        elif (self.simtype[select] == "ipad-retina-tall"):
+            self.simulatorType = 'ipad'
+            self.simulatorRetina = True
+            self.simulatorTall = True
 
-        self.simulatorType = simulatorType
-        self.simulatorDisplay = simulatorDisplay
-        self.simulatorHeight = simulatorHeight
+        self.prompt_ios_sdkversion()
 
-        self.simvers = ["7.1", "7.0.3", "7.0", "6.1", "5.0"]
-        self.show_quick_panel(self.simvers, self.select_ios_simversion)
+    def prompt_ios_sdkversion(self):
+        if not self.iosVersion:
+            if len(self.sdkvers) == 1:
+                self.select_ios_sdkversion(0)
+            else:
+                sdk_version_list = []
+                for sdk_version in self.sdkvers:
+                    sdk_version_list.append("iOS SDK: " + sdk_version)
+                self.show_quick_panel(sdk_version_list, self.select_ios_sdkversion)
+        else:
+            self.prompt_ios_simversion()
+
+    def select_ios_sdkversion(self, select):
+        if select < 0:
+            return
+        self.iosVersion = self.sdkvers[select]
+        self.prompt_ios_simversion()
+
+    def prompt_ios_simversion(self):
+        if not self.iosSimVersion:
+            if len(self.simvers) == 1:
+                self.select_ios_simversion(0)
+            else:
+                sim_version_list = []
+                for sim_version in self.simvers:
+                    sim_version_list.append("iOS Simulator: " + sim_version)
+                self.show_quick_panel(sim_version_list, self.select_ios_simversion)
+        else: 
+            self.run_ios_simulator()
 
     def select_ios_simversion(self, select):
         if select < 0:
             return
         self.iosSimVersion = self.simvers[select]
-        self.run_titanium(["--sim-type", self.simulatorType, self.simulatorDisplay, self.simulatorHeight])
+        self.run_ios_simulator()
+
+    def run_ios_simulator(self):
+        simulatorDisplay = ''
+        simulatorHeight = ''
+        tiInspector = ''
+        if self.simulatorRetina:
+            simulatorDisplay = '--retina'
+        if self.simulatorTall:
+            simulatorHeight = '--tall'
+        if self.tiInspectorHost:
+            tiInspector = '--debug-host %s' % self.tiInspectorHost
+        self.run_titanium(["--sim-type", self.simulatorType, simulatorDisplay, simulatorHeight, tiInspector])
 
     def select_ios_family(self, select):
         if select < 0:
@@ -278,6 +334,15 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             options.extend(["--output-dir", self.project_folder + "/dist"])
 
         self.run_titanium(options)
+
+    def load_ios_sdk_info(self):
+        process = subprocess.Popen([self.cli, "info", "--types", "ios", "--output", "json"], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        result, error = process.communicate()
+        info = json.loads(result.decode('utf-8'))
+
+        for name, obj in list(info["xcode"].items()):
+            self.sdkvers = sorted(obj["sdks"], reverse = True)
+            self.simvers = sorted(obj["sims"], reverse = True)
 
     def load_ios_info(self):
         process = subprocess.Popen([self.cli, "info", "--types", "ios", "--output", "json"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
