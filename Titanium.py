@@ -336,14 +336,14 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         self.run_titanium(options)
 
     def load_ios_sdk_info(self):
-        process = subprocess.Popen([self.cli, "info", "--types", "ios", "--output", "json", "--sdk", "3.2.2.GA"], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        process = subprocess.Popen([self.cli, "info", "--types", "ios", "--output", "json"], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         result, error = process.communicate()
         info = json.loads(result.decode('utf-8'))
 
-        if info['ios'] is None:
-            xcode = info['xcode']
-        else:
+        if 'ios' in info:
             xcode = info['ios']['xcode']
+        else:
+            xcode = info['xcode']
 
         for name, obj in list(xcode.items()):
             self.sdkvers = sorted(obj["sdks"], reverse = True)
