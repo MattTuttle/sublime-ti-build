@@ -278,7 +278,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
                 for sim_version in self.simvers:
                     sim_version_list.append("iOS Simulator: " + sim_version)
                 self.show_quick_panel(sim_version_list, self.select_ios_simversion)
-        else: 
+        else:
             self.run_ios_simulator()
 
     def select_ios_simversion(self, select):
@@ -336,11 +336,16 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         self.run_titanium(options)
 
     def load_ios_sdk_info(self):
-        process = subprocess.Popen([self.cli, "info", "--types", "ios", "--output", "json"], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        process = subprocess.Popen([self.cli, "info", "--types", "ios", "--output", "json", "--sdk", "3.2.2.GA"], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         result, error = process.communicate()
         info = json.loads(result.decode('utf-8'))
 
-        for name, obj in list(info["xcode"].items()):
+        if info['ios'] is None:
+            xcode = info['xcode']
+        else:
+            xcode = info['ios']['xcode']
+
+        for name, obj in list(xcode.items()):
             self.sdkvers = sorted(obj["sdks"], reverse = True)
             self.simvers = sorted(obj["sims"], reverse = True)
 
