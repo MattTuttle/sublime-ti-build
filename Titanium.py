@@ -108,21 +108,6 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
     def run_titanium(self, options=[]):
         cmd = [self.cli, "build", "--sdk", self.project_sdk, "--project-dir", self.project_folder, "--no-colors", "--platform", self.platform, "--log-level", self.loggingLevel]
 
-        project_sdk = self.project_sdk.split('.')
-
-        if (self.iosVersion is not "unknown" and self.iosVersion is not ""):
-            if int(project_sdk[0]) < 3 or int(project_sdk[1]) < 2:
-                ios_version = self.iosVersion.split('.')
-                options.extend(["--ios-version", ios_version[0] + "." + ios_version[1]])
-            else:
-                options.extend(["--ios-version", self.iosVersion])
-
-        if (self.iosSimVersion is not "unknown" and self.iosSimVersion is not ""):
-            if int(project_sdk[0]) < 3 or int(project_sdk[1]) < 2:
-                sim_version = self.iosSimVersion.split('.')
-                options.extend(["--sim-version", sim_version[0] + "." + sim_version[1]])
-            else:
-                options.extend(["--sim-version", self.iosSimVersion])
         cmd.extend(options)
 
         # save most recent command
@@ -288,16 +273,32 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         self.run_ios_simulator()
 
     def run_ios_simulator(self):
+        project_sdk = self.project_sdk.split('.')
         simulatorDisplay = ''
         simulatorHeight = ''
         tiInspector = ''
+        iosVersion = ''
+        iosSimVersion = ''
         if self.simulatorRetina:
             simulatorDisplay = '--retina'
         if self.simulatorTall:
             simulatorHeight = '--tall'
         if self.tiInspectorHost:
             tiInspector = '--debug-host %s' % self.tiInspectorHost
-        self.run_titanium(["--sim-type", self.simulatorType, simulatorDisplay, simulatorHeight, tiInspector])
+        if self.iosVersion:
+            if int(project_sdk[0]) < 3 or int(project_sdk[1]) < 2:
+                iosVersionSplit = self.iosVersion.split('.')
+                iosVersion = "--ios-version " + iosVersionSplit[0] + "." + iosVersionSplit[1]
+            else:
+                iosVersion = "--ios-version " + self.iosVersion
+        if self.iosSimVersion:
+            if int(project_sdk[0]) < 3 or int(project_sdk[1]) < 2:
+                iosSimVersionSplit = self.iosSimVersion.split('.')
+                iosSimVersion = "--sim-version " + iosSimVersionSplit[0] + "." + iosSimVersionSplit[1]
+            else:
+                iosSimVersion = "--sim-version " + self.iosSimVersion
+
+        self.run_titanium(["--sim-type", self.simulatorType, simulatorDisplay, simulatorHeight, tiInspector, iosVersion, iosSimVersion])
 
     def select_ios_family(self, select):
         if select < 0:
