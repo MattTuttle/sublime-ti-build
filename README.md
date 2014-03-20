@@ -1,7 +1,7 @@
-Sublime Text 2 build script for Titanium Appcelerator
-=====================================================
+Sublime Text build script for Titanium Appcelerator
+===================================================
 
-A build script for Appcelerator Titanium's CLI in Sublime Text 2. Select 'Titanium' from the Tools->Build System list to use. Each time you build you'll be prompted with build options.
+A build script for Appcelerator Titanium's CLI in Sublime Text. Select 'Titanium' from the Tools->Build System list to use. Each time you build you'll be prompted with build options.
 
 ## Features
 
