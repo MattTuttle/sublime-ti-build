@@ -13,7 +13,7 @@ A build script for Appcelerator Titanium's CLI in Sublime Text. Select 'Titanium
 
 ## Installation
 
-The best way to install is to use [Package Control](http://wbond.net/sublime_packages/package_control) for Sublime Text 2. Search for "Titanium Build" as the package name.
+The best way to install is to use [Package Control](http://wbond.net/sublime_packages/package_control) for Sublime Text. Search for "Titanium Build" as the package name.
 
 ## Usage
 
