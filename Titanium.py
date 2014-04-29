@@ -151,6 +151,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
 
         if result != '' and result != None:
             l = []
+            result = str(result, encoding = 'utf8')
             for a in result.splitlines():
                 ip = a.split(',')[0]
                 name = a.split(',')[1]
