@@ -59,7 +59,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             select = select - 1
 
         if select == -1:
-            self.window.run_command("exec", {"cmd": titaniumMostRecent})
+            self.window.run_command("exec", {"cmd": ' '.join(titaniumMostRecent), "shell": True})
         else:
             self.project_folder = folders[select]
             self.project_sdk = self.get_project_sdk_version()
@@ -82,7 +82,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         self.platform = self.platforms[select]
 
         if self.platform == "most recent configuration":
-            self.window.run_command("exec", {"cmd": titaniumMostRecent})
+            self.window.run_command("exec", {"cmd": ' '.join(titaniumMostRecent), "shell": True})
         elif self.platform == "ios":
             self.targets = ["simulator", "device", "dist-appstore", "dist-adhoc"]
             self.show_quick_panel(self.targets, self.select_ios_target)
@@ -114,7 +114,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         global titaniumMostRecent
         titaniumMostRecent = cmd
 
-        self.window.run_command("exec", {"cmd": cmd})
+        self.window.run_command("exec", {"cmd": ' '.join(cmd), "shell": True})
 
     def run_genymotion(self, options=[]):
         cmd = [self.cli, "build", "--sdk", self.project_sdk, "--project-dir", self.project_folder, "--no-colors", "--platform", self.platform, "--log-level", self.loggingLevel]
@@ -124,7 +124,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         global titaniumMostRecent
         titaniumMostRecent = cmd
 
-        self.window.run_command("exec", {"cmd": cmd})
+        self.window.run_command("exec", {"cmd": ' '.join(cmd), "shell": True})
 
     #--------------------------------------------------------------
     # MOBILE WEB
