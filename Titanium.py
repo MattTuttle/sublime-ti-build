@@ -59,7 +59,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
             select = select - 1
 
         if select == -1:
-            self.window.run_command("exec", {"cmd": ' '.join(titaniumMostRecent), "shell": True})
+            self.window.run_command("exec", titaniumMostRecent)
         else:
             self.project_folder = folders[select]
             self.project_sdk = self.get_project_sdk_version()
@@ -82,7 +82,7 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         self.platform = self.platforms[select]
 
         if self.platform == "most recent configuration":
-            self.window.run_command("exec", {"cmd": ' '.join(titaniumMostRecent), "shell": True})
+            self.window.run_command("exec", titaniumMostRecent)
         elif self.platform == "ios":
             self.targets = ["simulator", "device", "dist-appstore", "dist-adhoc"]
             self.show_quick_panel(self.targets, self.select_ios_target)
@@ -107,24 +107,25 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
 
     def run_titanium(self, options=[]):
         cmd = [self.cli, "build", "--sdk", self.project_sdk, "--project-dir", self.project_folder, "--no-colors", "--platform", self.platform, "--log-level", self.loggingLevel]
-
         cmd.extend(options)
+        execCMD = {"cmd": ' '.join(cmd), "shell": True}
 
         # save most recent command
         global titaniumMostRecent
-        titaniumMostRecent = cmd
+        titaniumMostRecent = execCMD
 
-        self.window.run_command("exec", {"cmd": ' '.join(cmd), "shell": True})
+        self.window.run_command("exec", execCMD)
 
     def run_genymotion(self, options=[]):
         cmd = [self.cli, "build", "--sdk", self.project_sdk, "--project-dir", self.project_folder, "--no-colors", "--platform", self.platform, "--log-level", self.loggingLevel]
         cmd.extend(options)
+        execCMD = {"cmd": cmd}
 
         # save most recent command
         global titaniumMostRecent
-        titaniumMostRecent = cmd
+        titaniumMostRecent = execCMD
 
-        self.window.run_command("exec", {"cmd": ' '.join(cmd), "shell": True})
+        self.window.run_command("exec", execCMD)
 
     #--------------------------------------------------------------
     # MOBILE WEB
