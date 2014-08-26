@@ -18,7 +18,9 @@ The best way to install is to use [Package Control](http://wbond.net/sublime_pac
 ## Usage
 
 `super+b` - select build options from drop downs
+
 or
+
 `super+shift+p` then select `Build: Titanium` from the Command Palette - select build options from drop downs
 
 ## Todo
