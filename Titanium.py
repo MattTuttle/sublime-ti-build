@@ -328,10 +328,10 @@ class TitaniumCommand(sublime_plugin.WindowCommand):
         options = ["--target", self.target, "--pp-uuid", profile, "--device-family", self.family]
 
         if self.target == "device":
-            options.extend(["--developer-name", self.cert[0]])
+            options.extend(["--developer-name", "\"" + self.cert[0] + "\""])
             options.extend(["--device-id", self.deviceudid])
         else:
-            options.extend(["--distribution-name", self.cert])
+            options.extend(["--distribution-name", "\"" + self.cert + "\""])
 
         if self.target == "dist-adhoc":
             options.extend(["--output-dir", self.project_folder + "/dist"])
