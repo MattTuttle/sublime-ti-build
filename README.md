@@ -1,5 +1,6 @@
-Sublime Text build script for Titanium Appcelerator
-===================================================
+[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](README.md) [![Package Control](https://img.shields.io/badge/Package%20Control-Titanium%20Build-orange.svg?style=flat)](https://packagecontrol.io/packages/Titanium%20Build)
+
+# Titanium Appcelerator build for Sublime Text
 
 A build script for Appcelerator Titanium's CLI in Sublime Text. Select 'Titanium' from the Tools->Build System list to use. Each time you build you'll be prompted with build options.
 
@@ -33,7 +34,7 @@ or
 
 ## MIT License
 
-Copyright (C) 2012-2013 Matt Tuttle
+Copyright (C) 2012-2015 Matt Tuttle
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
